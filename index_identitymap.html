@@ -43,6 +43,23 @@
 
         LDBB.BucketsController = Ember.ArrayController.extend({});
 
+        LDBB.BucketKeyController = Ember.ObjectController.extend({
+            isEditing: false,
+
+            doEdit: function() {
+                this.set('isEditing', true);
+            },
+
+            doSave: function() {
+                this.set('isEditing', false);
+            },
+
+            modelObserver: function() {
+                this.set('isEditing', false);
+            }.observes('model')
+
+        });
+
         LDBB.Model = Ember.Object.extend({})
 
         LDBB.Model.reopenClass({
@@ -213,9 +230,16 @@
 
     <script type="text/x-handlebars" id="bucket/key">
         <h1>{{keyName}}</h1>
-        <div class="panel panel-body">
-            {{value}}
-        </div>
+
+        {{#if isEditing}}
+            {{textarea valueBinding="value" classNames="editKeyArea"}}
+            <button class="btn btn-default" {{action doSave}}>Save</button>
+        {{else}}
+            <div class="panel panel-body">
+                {{value}}
+            </div>
+            <button class="btn btn-default" {{action doEdit}}>Edit</button>
+        {{/if}}
     </script>
 
     <script type="text/x-handlebars" id="header">
