@@ -16,7 +16,9 @@
 
         LDBB.Router.map(function() {
             this.resource('buckets', {path: '/'}, function() {
-                this.resource('bucket', {path: '/bucket/:bucket_id'});
+                this.resource('bucket', {path: '/bucket/:bucket_id'}, function() {
+                    this.route('key', {path: '/key/:key_id'});
+                });
             })
         });
 
@@ -29,6 +31,13 @@
         LDBB.BucketRoute = Ember.Route.extend({
             model: function(bucket) {
                 return LDBB.Bucket.find(bucket.bucket_id);
+            }
+        });
+
+        LDBB.BucketKeyRoute = Ember.Route.extend({
+            model: function(key) {
+                var bucket = this.modelFor('bucket');
+                return LDBB.Key.find(bucket.get('id'), key.key_id);
             }
         });
 
@@ -189,12 +198,23 @@
             <div class="col-md-4">
                 <h1>{{id}}</h1>
                 <div class="list-group">
-                    {{#each keys}}
-                        <div class="list-group-item">{{keyName}}</div>
+                    {{#each key in keys}}
+                        {{#linkTo "bucket.key" key class="list-group-item"}}
+                            <div>{{key.keyName}}</div>
+                        {{/linkTo}}
                     {{/each}}
                 </div>
             </div>
-            <div class="col-md-8"></div>
+            <div class="col-md-8">
+                {{outlet}}
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" id="bucket/key">
+        <h1>{{keyName}}</h1>
+        <div class="panel panel-body">
+            {{value}}
         </div>
     </script>
 
