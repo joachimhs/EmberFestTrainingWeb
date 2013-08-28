@@ -41,6 +41,13 @@
             find: function(url, id, type, key) {
                 console.log('find id: ' + id + ' url: ' + url + ' type: ' + type);
 
+                var collection = Ember.get(type, 'collection');
+
+                if (!collection) {
+                    collection = Ember.A();
+                    Ember.set(type, 'collection', collection);
+                }
+
                 var foundItem = this.getObjectById(id, type);
                 if (!foundItem) {
                     foundItem = type.create({id: id});
@@ -109,7 +116,19 @@
 
 
         LDBB.Bucket = LDBB.Model.extend({
+            keys: function() {
+                var keys = Ember.A();
+                var bucketid = this.get('id');
 
+                if (this.get('key_ids')) {
+                    this.get('key_ids').forEach(function(keyid) {
+                        console.log('bucketid: ' + bucketid + " keyid: " + keyid);
+                        keys.pushObject(LDBB.Key.find(bucketid, keyid));
+                    });
+                }
+
+                return keys;
+            }.property('key_ids.length')
         });
 
         LDBB.Bucket.reopenClass({
@@ -121,9 +140,21 @@
             findAll: function() {
                 return LDBB.Model.findAll('/json/buckets', LDBB.Bucket, 'buckets');
             }
-        })
+        });
 
+        LDBB.Key = LDBB.Model.extend({
 
+        });
+
+        LDBB.Key.reopenClass({
+            find: function(bucketid, keyid) {
+                return LDBB.Model.find('/json/buckets/' + bucketid + "/key", keyid, LDBB.Key, 'key');
+            },
+
+            findAll: function(bucketid) {
+                return LDBB.Model.findAll('/json/buckets/' + bucketid, LDBB.Key, 'bucket');
+            }
+        });
 
     </script>
 
@@ -158,8 +189,8 @@
             <div class="col-md-4">
                 <h1>{{id}}</h1>
                 <div class="list-group">
-                    {{#each key_ids}}
-                        <div class="list-group-item">{{this}}</div>
+                    {{#each keys}}
+                        <div class="list-group-item">{{keyName}}</div>
                     {{/each}}
                 </div>
             </div>
