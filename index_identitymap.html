@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LevelDBrowser</title>
+    <link rel="stylesheet" href="css/bootstrap.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+    <link rel="stylesheet" href="css/main.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+
+    <script type="text/javascript" charset="utf-8" src="js/scripts/jquery-1.10.2.min.js" ></script>
+    <script type="text/javascript" charset="utf-8" src="js/scripts/handlebars.js" ></script>
+    <script type="text/javascript" charset="utf-8" src="js/scripts/ember-1.0.0-rc.7.js" ></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script type="text/javascript" charset="utf-8">
+        var LDBB = Ember.Application.create();
+
+        LDBB.Router.map(function() {
+            this.resource('buckets', {path: '/'}, function() {
+                this.resource('bucket', {path: '/bucket/:bucket_id'});
+            })
+        });
+
+        LDBB.BucketsRoute = Ember.Route.extend({
+            model: function() {
+                return LDBB.Bucket.findAll();
+            }
+        });
+
+        LDBB.BucketRoute = Ember.Route.extend({
+            model: function(bucket) {
+                return LDBB.Bucket.find(bucket.bucket_id);
+            }
+        });
+
+        LDBB.BucketsController = Ember.ArrayController.extend({});
+
+        LDBB.Model = Ember.Object.extend({})
+
+        LDBB.Model.reopenClass({
+
+            find: function(url, id, type, key) {
+                console.log('find id: ' + id + ' url: ' + url + ' type: ' + type);
+
+                var foundItem = this.getObjectById(id, type);
+                if (!foundItem) {
+                    foundItem = type.create({id: id});
+                    $.getJSON(url + "/" + id, function(data) {
+                        if (data[key]) {
+                            foundItem.setProperties(data[key]);
+                        }
+                    });
+
+                    Ember.get(type, 'collection').pushObject(foundItem);
+                }
+
+
+                return foundItem;
+            },
+
+            findAll: function(url, type, key) {
+                console.log('Model findAll: ' + type);
+                var collection = Ember.get(type, 'collection');
+
+                var model = this;
+
+                if (!collection) {
+                    collection = Ember.A();
+                    Ember.set(type, 'collection', collection);
+                }
+
+                $.getJSON(url, function(data) {
+
+                    console.log(data);
+                    if (data[key]) {
+                        $.each(data[key], function(i, row) {
+                            var item = model.getObjectById(row.id, type)
+                            if (!item) {
+                                item = type.create({id: row.id});
+                                collection.pushObject(item);
+                            }
+
+                            item.setProperties(row);
+                        });
+                    }
+                });
+
+                return Ember.get(type, 'collection');
+           },
+
+            getObjectById: function(id, type) {
+                var bucket = null;
+
+                var collection = Ember.get(type, 'collection');
+
+                if (!collection) {
+                    collection = Ember.A();
+                    Ember.set(type, 'collection');
+                }
+
+                collection.forEach(function(item) {
+                    if (item.get('id') === id) {
+                        bucket = item;
+                    }
+                });
+
+                return bucket;
+            }
+        });
+
+
+        LDBB.Bucket = LDBB.Model.extend({
+
+        });
+
+        LDBB.Bucket.reopenClass({
+            find: function(id) {
+                console.log(id);
+                return LDBB.Model.find('/json/buckets', id, LDBB.Bucket, 'bucket');
+            },
+
+            findAll: function() {
+                return LDBB.Model.findAll('/json/buckets', LDBB.Bucket, 'buckets');
+            }
+        })
+
+
+
+    </script>
+
+    <script type="text/x-handlebars" id="application">
+        {{render header}}
+        <div id="mainArea" class="pageContent">
+            <div class="row">
+                {{outlet}}
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" id="buckets">
+        <div class="col-md-4">
+            <h1>Buckets</h1>
+
+            <div class="list-group">
+                {{#each controller}}
+                    {{#linkTo "bucket" this class="list-group-item"}}
+                        <div>{{id}}</div>
+                    {{/linkTo}}
+                {{/each}}
+            </div>
+        </div>
+        <div class="col-md-8">
+            {{outlet}}
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" id="bucket">
+        <div class="row">
+            <div class="col-md-4">
+                <h1>{{id}}</h1>
+                <div class="list-group">
+                    {{#each key_ids}}
+                        <div class="list-group-item">{{this}}</div>
+                    {{/each}}
+                </div>
+            </div>
+            <div class="col-md-8"></div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars" id="header">
+        <div id="header" class="navbar navbar-fixed-top top-navbar">
+            <div class="pageContent">
+                <img src="/images/header_logo.png">
+            </div>
+        </div>
+    </script>
+
+</head>
+<body>
+
+</body>
+</html>
