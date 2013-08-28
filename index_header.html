@@ -16,10 +16,19 @@
     </script>
 
     <script type="text/x-handlebars" id="application">
-        Hello Ember!
+        {{render header}}
+        <div id="mainArea" class="pageContent">
+            Body Content goes here!
+        </div>
     </script>
 
-
+    <script type="text/x-handlebars" id="header">
+        <div id="header" class="navbar navbar-fixed-top top-navbar">
+            <div class="pageContent">
+                <img src="/images/header_logo.png">
+            </div>
+        </div>
+    </script>
 
 </head>
 <body>
