@@ -52,6 +52,8 @@
 
             doSave: function() {
                 this.set('isEditing', false);
+                var model = this.get('content');
+                LDBB.Key.updateRecord(model);
             },
 
             modelObserver: function() {
@@ -120,6 +122,27 @@
                 return Ember.get(type, 'collection');
            },
 
+            updateRecord: function(url, type, model) {
+                console.log('update: ' + type + " " + model.get('id'));
+
+                model.set('isSaving', true);
+                console.log(JSON.stringify(model));
+                $.ajax({
+                    type: "PUT",
+                    url: url,
+                    data: JSON.stringify(model),
+                    success: function(res, status, xhr) {
+                        if (res.id) {
+                            model.set('isSaving', false);
+                            model.setProperties(res);
+                        } else {
+                            model.set('isError', true);
+                        }
+                    },
+                    error: function(xhr, status, err) { model.set('isError', false);  }
+                });
+            },
+
             getObjectById: function(id, type) {
                 var bucket = null;
 
@@ -179,6 +202,10 @@
 
             findAll: function(bucketid) {
                 return LDBB.Model.findAll('/json/buckets/' + bucketid, LDBB.Key, 'bucket');
+            },
+
+            updateRecord: function(model) {
+                LDBB.Model.updateRecord("/json/buckets/" + model.get('bucketName') + "/key/" + model.get('keyName'), LDBB.Key, model);
             }
         });
 
