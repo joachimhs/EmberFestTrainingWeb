@@ -42,6 +42,34 @@
             }
         });
 
+        LDBB.HeaderController = Ember.Controller.extend({
+
+            newBucketName: null,
+            newKeyName: null,
+            newKeyValue: null,
+
+            addBucket: function() {
+                console.log('adding new bucket: ' + this.get('newBucketName'));
+                var bucketId = this.get('newBucketName');
+                if (bucketId) {
+                    var bucket = LDBB.Bucket.create({id: bucketId});
+                    LDBB.Bucket.createRecord(bucket);
+                }
+            },
+
+            addKey: function() {
+                console.log('adding new key. Bucket: ' + this.get('newBucketName') + " key: " + this.get('newKeyName') + " value: " + this.get('newKeyValue'));
+                var bucketId = this.get('newBucketName');
+                var keyId = this.get('newKeyName');
+                var keyValue = this.get('newKeyValue');
+
+                if (bucketId && keyId && keyValue) {
+                    var key = LDBB.Key.create({id: bucketId + keyId, bucketName: bucketId, keyName: keyId, value: keyValue});
+                    LDBB.Key.createRecord(key);
+                }
+            }
+        });
+
         LDBB.BucketsController = Ember.ArrayController.extend({});
 
         LDBB.BucketKeyController = Ember.ObjectController.extend({
@@ -144,6 +172,55 @@
                 });
             },
 
+            createRecord: function(url, type, model) {
+                console.log('save: ' + type + " " + JSON.stringify(model));
+                var collection = this;
+
+                if (!collection) {
+                    collection = Ember.A();
+                    Ember.set(type, 'collection');
+                }
+
+                model.set('isSaving', true);
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: JSON.stringify(model),
+                    success: function(res, status, xhr) {
+                        console.log(res);
+                        if (res.id) {
+                            Ember.get(type, 'collection').pushObject(model);
+                            model.set('isSaving', false);
+                        } else {
+                            model.set('isError', true);
+                        }
+                    },
+                    error: function(xhr, status, err) { model.set('isError', false);  }
+                });
+
+                return model;
+            },
+
+            reload: function(url, id, type, key) {
+                console.log('reload: ' + type + " id: " + id);
+
+                var foundItem = this.getObjectById(id, type);
+
+                if (foundItem) {
+                    foundItem.set('isLoaded', false);
+
+                    $.getJSON(url + "/" +  id, function(data) {
+                        if (data[key]) {
+                            foundItem.setProperties(data[key]);
+                            foundItem.set('isLoaded', true);
+                            foundItem.set('isError', false);
+                        }
+                    });
+                } else {
+                    LDBB.Model.find(url, id, type, key);
+                }
+            },
+
             getObjectById: function(id, type) {
                 var bucket = null;
 
@@ -189,6 +266,18 @@
 
             findAll: function() {
                 return LDBB.Model.findAll('/json/buckets', LDBB.Bucket, 'buckets');
+            },
+
+            createRecord: function(model) {
+                LDBB.Model.createRecord('/json/buckets', LDBB.Bucket, model);
+            },
+
+            updateRecord: function(model) {
+                LDBB.Model.updateRecord("/json/buckets", LDBB.Bucket, model);
+            },
+
+            reload: function(id) {
+                return LDBB.Model.reload('/json/buckets', id, LDBB.Bucket, 'bucket');
             }
         });
 
@@ -207,6 +296,10 @@
 
             updateRecord: function(model) {
                 LDBB.Model.updateRecord("/json/buckets/" + model.get('bucketName') + "/key/" + model.get('keyName'), LDBB.Key, model);
+            },
+
+            createRecord: function(model) {
+                LDBB.Model.createRecord('/json/buckets/' + model.get('bucketName') + "/key/" + model.get('keyName'), LDBB.Key, model);
             }
         });
 
@@ -276,7 +369,7 @@
                 <img src="/images/header_logo.png">
                 <div class="pull-right">
                     <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newBucketModal">Create Bucket</button> <br />
-                    <button class="btn btn-default headerButton">Create Key</button>
+                    <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newKeyModal">Create Key</button>
                 </div>
             </div>
         </div>
@@ -299,6 +392,37 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" {{action "addBucket"}}>Save changes</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+        <div class="modal fade" id="newKeyModal" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Create new Key</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form">
+                            <div class="form-group">
+                                <label>New Bucket name:</label>
+                                {{input valueBinding="newBucketName" classNames="form-control"}}
+                            </div>
+                            <div class="form-group">
+                                <label>New Key name:</label>
+                                {{input valueBinding="newKeyName" classNames="form-control"}}
+                            </div>
+                            <div class="form-group">
+                                <label>New Key value:</label>
+                                {{textarea valueBinding="newKeyValue" classNames="form-control"}}
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" {{action "addKey"}}>Save changes</button>
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
