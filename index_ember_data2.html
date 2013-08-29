@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LevelDBrowser</title>
+<link rel="stylesheet" href="css/bootstrap.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+<link rel="stylesheet" href="css/main.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+
+<script type="text/javascript" charset="utf-8" src="js/scripts/jquery-1.10.2.min.js" ></script>
+<script type="text/javascript" charset="utf-8" src="js/scripts/handlebars.js" ></script>
+<script type="text/javascript" charset="utf-8" src="js/scripts/ember-1.0.0-rc.7.js" ></script>
+<script type="text/javascript" charset="utf-8" src="js/scripts/ember-data.js" ></script>
+<script type="text/javascript" charset="utf-8" src="js/scripts/bootstrap-modal.js" ></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script type="text/javascript" charset="utf-8">
+    var LDBB = Ember.Application.create();
+
+    LDBB.Adapter = DS.RESTAdapter.extend({
+        namespace: 'json'
+    });
+
+    LDBB.Store = DS.Store.extend({
+        adapter:  "LDBB.Adapter",
+        revision: 12
+    });
+
+    LDBB.Router.map(function() {
+        this.resource('buckets', {path: "/"}, function() {
+            this.resource('bucket', {path: "/bucket/:bucket_id"}, function() {
+                this.route('key', {path: "/key/:key_id"});
+            })
+        });
+    });
+
+    LDBB.BucketsRoute = Ember.Route.extend({
+        model: function() {
+            var buckets = LDBB.Bucket.find();
+            console.log(buckets);
+            return buckets;
+        }
+    });
+
+    LDBB.BucketKeyController = Ember.ObjectController.extend({
+        isEditing: false,
+
+        doEdit: function() {
+            this.set('isEditing', true);
+        },
+
+        doSave: function() {
+            this.set('isEditing', false);
+            this.get('store').commit();
+        },
+
+        modelObserver: function() {
+            this.set('isEditing', false);
+        }.observes('model')
+
+    });
+
+    LDBB.Bucket = DS.Model.extend({
+        keys: DS.hasMany('LDBB.Key')
+    });
+
+    LDBB.Key = DS.Model.extend({
+        bucketName: DS.attr('string'),
+        keyName: DS.attr('string'),
+        value: DS.attr('string')
+    });
+</script>
+
+<script type="text/x-handlebars" id="application">
+    {{render header}}
+    <div id="mainArea" class="pageContent">
+        <div class="row">
+            {{outlet}}
+        </div>
+    </div>
+</script>
+
+<script type="text/x-handlebars" id="buckets">
+    <div class="col-md-4">
+        <h1>Buckets</h1>
+
+        <div class="list-group">
+            {{#each controller}}
+            {{#linkTo "bucket" this class="list-group-item"}}
+            <div>{{id}}</div>
+            {{/linkTo}}
+            {{/each}}
+        </div>
+    </div>
+    <div class="col-md-8">
+        {{outlet}}
+    </div>
+</script>
+
+<script type="text/x-handlebars" id="bucket">
+    <div class="row">
+        <div class="col-md-4">
+            <h1>{{id}}</h1>
+            <div class="list-group">
+                {{#each key in keys}}
+                {{#linkTo "bucket.key" key class="list-group-item"}}
+                <div>{{key.keyName}}</div>
+                {{/linkTo}}
+                {{/each}}
+            </div>
+        </div>
+        <div class="col-md-8">
+            {{outlet}}
+        </div>
+    </div>
+</script>
+
+<script type="text/x-handlebars" id="bucket/key">
+    <h1>{{keyName}}</h1>
+
+    {{#if isEditing}}
+        {{textarea valueBinding="value" classNames="editKeyArea"}}
+        <button class="btn btn-default" {{action doSave}}>Save</button>
+    {{else}}
+        <div class="panel panel-body">
+            {{value}}
+        </div>
+        <button class="btn btn-default" {{action doEdit}}>Edit</button>
+    {{/if}}
+</script>
+
+<script type="text/x-handlebars" id="header">
+    <div id="header" class="navbar navbar-fixed-top top-navbar">
+        <div class="pageContent">
+            <img src="/images/header_logo.png">
+            <div class="pull-right">
+                <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newBucketModal">Create Bucket</button> <br />
+                <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newKeyModal">Create Key</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newBucketModal" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Create new Bucket</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label>New Bucket name:</label>
+                            {{input valueBinding="newBucketName" classNames="form-control"}}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" {{action "addBucket"}}>Save changes</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="newKeyModal" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Create new Key</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label>New Bucket name:</label>
+                            {{input valueBinding="newBucketName" classNames="form-control"}}
+                        </div>
+                        <div class="form-group">
+                            <label>New Key name:</label>
+                            {{input valueBinding="newKeyName" classNames="form-control"}}
+                        </div>
+                        <div class="form-group">
+                            <label>New Key value:</label>
+                            {{textarea valueBinding="newKeyValue" classNames="form-control"}}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" {{action "addKey"}}>Save changes</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+</script>
+
+</head>
+<body>
+
+</body>
+</html>

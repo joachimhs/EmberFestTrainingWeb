@@ -1,4 +1,4 @@
-{{#if controllers.user.isLoggedIn}}
+
     <div class="col-md-3">
         <h1>Buckets</h1>
             <div id="bucketsArea">
@@ -14,9 +14,3 @@
     <div class="col-md-9">
         {{outlet}}
     </div>
-{{else}}
-    <div class="loginBox well">
-        <h1>LevelDBrowser</h1>
-        <p>In order to access LevelDB you must be logged in!</p>
-    </div>
-{{/if}}
