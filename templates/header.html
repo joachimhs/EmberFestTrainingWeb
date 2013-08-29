@@ -6,8 +6,8 @@
             </ul>
             <div class="pull-right fivePxMarginTop">
                 {{#if controllers.user.isLoggedIn}}
-                    <button class="btn btn-primary headerButton" {{action doLogOut}}>
-                        <span class="glyphicon glyphicon-log-in  pull-left"></span> Log Out
+                    <button class="btn btn-primary headerButton" {{action doLogout}}>
+                    <span class="glyphicon glyphicon-log-in pull-left"></span> Log Out
                     </button>
                     <br />
                     <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newBucketModal">
@@ -19,7 +19,7 @@
                     </button>
                 {{else}}
                     <button class="btn btn-primary headerButton" {{action doLogIn}}>
-                        <span class="glyphicon glyphicon-log-in  pull-left"></span> Log In
+                        <span class="glyphicon glyphicon-log-in pull-left"></span> Log In
                     </button>
                 {{/if}}
             </div>
