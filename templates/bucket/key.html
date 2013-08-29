@@ -1,0 +1,17 @@
+<h1>{{keyName}}</h1>
+{{#if isEditing}}
+    <form role="form">
+        <div class="form-group">
+            {{textarea valueBinding="value" classNames="editKeyArea"}}
+            <button class="btn btn-default" {{action "saveKey" this}}>Save</button>
+        </div>
+    </form>
+{{else}}
+    <div class="panel panel-default" style="width: 100%;">
+        <div class="panel-body"  style="width: 100%;">
+            {{value}}
+        </div>
+    </div>
+
+    <button class="btn btn-default" {{action "editKey" this}}>Edit</button>
+{{/if}}

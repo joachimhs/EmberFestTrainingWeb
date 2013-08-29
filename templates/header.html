@@ -1,0 +1,82 @@
+<div id="headerArea">
+    <div class="navbar navbar-fixed-top top-navbar" role="navigation">
+        <div class="collapse navbar-collapse navbar-ex1-collapse pageContent">
+            <ul class="nav navbar-nav">
+                <li>{{#linkTo "buckets"}}<img src="images/header_logo.png" />{{/linkTo}}</li>
+            </ul>
+            <div class="pull-right fivePxMarginTop">
+                {{#if controllers.user.isLoggedIn}}
+                    <button class="btn btn-primary headerButton" {{action doLogOut}}>
+                        <span class="glyphicon glyphicon-log-in  pull-left"></span> Log Out
+                    </button>
+                    <br />
+                    <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newBucketModal">
+                        <span class="glyphicon glyphicon-inbox pull-left"></span> Create Bucket
+                    </button>
+                    <br />
+                    <button class="btn btn-default headerButton" data-toggle="modal" data-target="#newKeyModal">
+                        <span class="glyphicon glyphicon-plus-sign pull-left"></span> Insert Key
+                    </button>
+                {{else}}
+                    <button class="btn btn-primary headerButton" {{action doLogIn}}>
+                        <span class="glyphicon glyphicon-log-in  pull-left"></span> Log In
+                    </button>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newBucketModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create new Bucket</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label>New Bucket name:</label>
+                        {{input valueBinding="newBucketName" classNames="form-control"}}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" {{action "addBucket"}}>Save changes</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="newKeyModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create new Key</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label>New Bucket name:</label>
+                        {{input valueBinding="newBucketName" classNames="form-control"}}
+                    </div>
+                    <div class="form-group">
+                        <label>New Key name:</label>
+                        {{input valueBinding="newKeyName" classNames="form-control"}}
+                    </div>
+                    <div class="form-group">
+                        <label>New Key value:</label>
+                        {{textarea valueBinding="newKeyValue" classNames="form-control"}}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" {{action "addKey"}}>Save changes</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
